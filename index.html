@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crypto Leverage Calculator</title>
+  <link rel="manifest" href="manifest.json">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #0b0c10;
+      --text: #fff;
+      --accent: #45a29e;
+    }
+    body.light {
+      --bg: #f3f3f3;
+      --text: #111;
+      --accent: #0077b6;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: sans-serif;
+      text-align: center;
+      padding: 20px;
+      transition: 0.3s ease;
+    }
+    h1 { color: var(--accent); }
+    input, button {
+      width: 90%;
+      margin: 10px 0;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    input { background: #1f2833; color: #fff; }
+    body.light input { background: #fff; color: #111; }
+    button {
+      background: var(--accent);
+      color: var(--bg);
+      font-weight: bold;
+    }
+    #output {
+      margin-top: 15px;
+      background: rgba(255,255,255,0.1);
+      padding: 10px;
+      border-radius: 10px;
+    }
+    #themeBtn {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: var(--accent);
+      border-radius: 50%;
+      width: 40px; height: 40px;
+      color: var(--bg);
+      font-weight: bold;
+      border: none;
+    }
+    canvas { max-width: 95%; margin-top: 15px; }
+  </style>
+</head>
+<body>
+  <button id="themeBtn">☀️</button>
+  <h1>Crypto Leverage Calculator</h1>
+
+  <input type="number" id="oldPrice" placeholder="Old Price (e.g. 100)">
+  <input type="number" id="newPrice" placeholder="New Price (e.g. 110)">
+  <input type="number" id="leverage" placeholder="Leverage (e.g. 10)">
+  <input type="number" id="margin" placeholder="Investment ($)">
+  <button onclick="calc()">Calculate</button>
+  <div id="output"></div>
+  <canvas id="chart"></canvas>
+
+  <script>
+    // Theme Toggle
+    const themeBtn = document.getElementById('themeBtn');
+    themeBtn.addEventListener('click', () => {
+      document.body.classList.toggle('light');
+      themeBtn.textContent = document.body.classList.contains('light') ? '🌙' : '☀️';
+    });
+
+    let chart;
+
+    function calc() {
+      const oldP = parseFloat(document.getElementById("oldPrice").value);
+      const newP = parseFloat(document.getElementById("newPrice").value);
+      const lev = parseFloat(document.getElementById("leverage").value);
+      const m = parseFloat(document.getElementById("margin").value);
+
+      if (!oldP || !newP || !lev || !m) {
+        alert("Please fill all fields!");
+        return;
+      }
+
+      const priceChange = ((newP - oldP) / oldP) * 100;
+      const effectiveChange = priceChange * lev;
+      const profitLoss = (effectiveChange / 100) * m;
+
+      document.getElementById("output").innerHTML = `
+        <p>📈 Price change: ${priceChange.toFixed(2)}%</p>
+        <p>⚡ Effective: ${effectiveChange.toFixed(2)}%</p>
+        <p>💰 Profit / Loss: $${profitLoss.toFixed(2)}</p>
+      `;
+
+      // Chart
+      const ctx = document.getElementById('chart').getContext('2d');
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['Old Price', 'New Price'],
+          datasets: [{
+            label: 'Price Movement',
+            data: [oldP, newP],
+            borderColor: '#45a29e',
+            fill: false,
+            tension: 0.3
+          }]
+        },
+        options: { responsive: true }
+      });
+    }
+
+    // Service Worker Register
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+  </script>
+</body>
+</html>
